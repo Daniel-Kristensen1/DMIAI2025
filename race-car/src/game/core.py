@@ -7,6 +7,8 @@ from ..elements.car import Car
 from ..elements.road import Road
 from ..elements.sensor import Sensor
 from ..mathematics.vector import Vector
+
+
 import json
 
 # Define constants
@@ -16,6 +18,7 @@ LANE_COUNT = 5
 CAR_COLORS = ['yellow', 'blue', 'red']
 MAX_TICKS = 60 * 60  # 60 seconds @ 60 fps
 MAX_MS = 60 * 1000600   # 60 seconds flat
+ACTION_LIST = ["ACCELERATE", "DECELERATE", "STEER_LEFT", "STEER_RIGHT", "NOTHING"]
 
 # Define game state
 class GameState:
@@ -230,11 +233,15 @@ def update_game(current_action: str):
         sensor.update()
 
     return STATE
-    
+
+def get_observation_from_state(state):
+    obs = [state.ego.x, state.ego.y, state.ego.velocity.x]
+    obs += [s.value for s in state.sensors]
+    return obs 
 # Main game loop
 ACTION_LOG = []
 
-def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "actions_log.json"):
+def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "actions_log.json", agent=None):
     global STATE
     clock = pygame.time.Clock()
     screen = None
@@ -251,9 +258,15 @@ def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "a
         if STATE.crashed or STATE.ticks > MAX_TICKS or STATE.elapsed_game_time > MAX_MS:
             print(f"Game over: Crashed: {STATE.crashed}, Ticks: {STATE.ticks}, Elapsed time: {STATE.elapsed_game_time} ms, Distance: {STATE.distance}")
             break
+        
 
-        # Handle action - get_action() is a method for using arrow keys to steer - implement own logic here!
-        action = get_action()
+        if agent is not None:
+            # Get observation from the current STATE
+            obs = get_observation_from_state(STATE)
+            action_idx = agent.select_action(obs)
+            action = ACTION_LIST[action_idx]
+        else:
+            action = get_action()
 
         # Log the action with tick
         if log_actions:
