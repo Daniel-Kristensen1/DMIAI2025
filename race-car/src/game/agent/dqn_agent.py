@@ -6,6 +6,9 @@ import numpy as np
 from collections import deque
 from src.game.agent.base_agent import BaseAgent
 
+
+
+# Definer QNetwork her (eller importer den fra en anden fil)
 class QNetwork(nn.Module):
     def __init__(self, obs_dim, action_dim):
         super().__init__()
@@ -21,7 +24,9 @@ class QNetwork(nn.Module):
         return self.net(x)
 
 class DQNAgent(BaseAgent):
-    def __init__(self, obs_dim, action_dim, lr=1e-3, gamma=0.99, epsilon=1.0, epsilon_min=0.05, epsilon_decay=0.995, buffer_size=10000, batch_size=64):
+    def __init__(self, obs_dim, action_dim, lr=1e-3, gamma=0.99, epsilon=1.0,
+                 epsilon_min=0.05, epsilon_decay=0.995, buffer_size=10000, batch_size=256):
+        super().__init__()
         self.obs_dim = obs_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -42,7 +47,10 @@ class DQNAgent(BaseAgent):
     def select_action(self, observation):
         if random.random() < self.epsilon:
             return random.randint(0, self.action_dim - 1)
-        obs = torch.FloatTensor(observation).unsqueeze(0).to(self.device)
+        if isinstance(observation, torch.Tensor):
+            obs = observation.unsqueeze(0).to(self.device)
+        else:
+            obs = torch.tensor(observation, dtype=torch.float32, device=self.device).unsqueeze(0)
         with torch.no_grad():
             q_values = self.q_net(obs)
         return int(torch.argmax(q_values, dim=1).item())
@@ -55,10 +63,15 @@ class DQNAgent(BaseAgent):
             return
         batch = random.sample(self.memory, self.batch_size)
         obs, actions, rewards, next_obs, dones = zip(*batch)
+
+        obs = [o.cpu().numpy() if isinstance(o, torch.Tensor) else o for o in obs]
+        next_obs = [no.cpu().numpy() if isinstance(no, torch.Tensor) else no for no in next_obs]
+
         obs = torch.FloatTensor(np.array(obs)).to(self.device)
+        next_obs = torch.FloatTensor(np.array(next_obs)).to(self.device)
         actions = torch.LongTensor(actions).unsqueeze(1).to(self.device)
         rewards = torch.FloatTensor(rewards).unsqueeze(1).to(self.device)
-        next_obs = torch.FloatTensor(np.array(next_obs)).to(self.device)
+
         dones = torch.FloatTensor(dones).unsqueeze(1).to(self.device)
 
         q_values = self.q_net(obs).gather(1, actions)
@@ -71,7 +84,6 @@ class DQNAgent(BaseAgent):
         loss.backward()
         self.optimizer.step()
 
-        # Epsilon decay
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
