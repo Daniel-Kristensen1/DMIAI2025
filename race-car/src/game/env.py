@@ -19,14 +19,18 @@ class RaceCarEnv:
         obs = self.get_observation()
         reward = self.compute_reward()
         done = core.STATE.crashed or core.STATE.ticks > core.MAX_TICKS
-        info = {}
+        
+        # 👇 Add distance info here
+        info = {
+            "distance": core.STATE.distance
+        }
+        
         return obs, reward, done, info
 
     def get_observation(self):
         obs = [core.STATE.ego.x, core.STATE.ego.y, core.STATE.ego.velocity.x]
         obs += [s.reading if s.reading is not None else -1.0 for s in core.STATE.sensors]
         return np.array(obs, dtype=np.float32)
-
 
     def compute_reward(self):
         if core.STATE.crashed:
