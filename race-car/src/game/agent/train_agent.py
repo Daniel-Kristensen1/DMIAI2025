@@ -22,7 +22,7 @@ agent = DQNAgent(obs_dim, action_dim)
 agent.q_net.to(device)
 agent.target_net.to(device)  # Husk også target net på GPU
 
-num_episodes = 3000
+num_episodes = 100
 target_update_freq = 10
 
 for episode in trange(num_episodes, desc="Training Progress"):
@@ -54,6 +54,7 @@ for episode in trange(num_episodes, desc="Training Progress"):
         step_count += 1
 
     print(f"Episode {episode} finished after {step_count} steps, total reward: {total_reward}")
+    print(f"Gamma: {agent.gamma}, Epsilon: {agent.epsilon}, Batch size: {agent.batch_size}")
 
     if episode % target_update_freq == 0:
         agent.update_target()

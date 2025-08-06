@@ -11,7 +11,7 @@ from src.game.agent.dqn_agent import DQNAgent
 
 from tqdm import trange
 
-episodes = 800
+episodes = 2000
 
 def worker(worker_id, num_episodes):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -101,8 +101,9 @@ def parallel_training(total_episodes=episodes, workers=4):
     for obs, action, reward, next_obs, done in all_experiences:
         agent.store_transition(obs, action, reward, next_obs, done)
 
-    for _ in range(100):  # antal learning steps
+    for _ in range(len(all_experiences) // agent.batch_size * 5):
         agent.learn()
+
 
     agent.update_target()
 

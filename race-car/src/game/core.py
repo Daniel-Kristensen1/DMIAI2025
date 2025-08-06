@@ -228,7 +228,7 @@ def update_game(current_action: str):
     STATE.distance += STATE.ego.velocity.x
     update_cars()
     remove_passed_cars()
-    place_car()
+    #place_car()
     for sensor in STATE.sensors:
         sensor.update()
 
@@ -241,17 +241,6 @@ def get_observation_from_state(state):
     return obs 
 # Main game loop
 ACTION_LOG = []
-
-def check_collision():
-    # Handle collisions
-    for car in STATE.cars:
-        if car != STATE.ego and intersects(STATE.ego.rect, car.rect):
-            STATE.crashed = True
-    # Check collision with walls
-    for wall in STATE.road.walls:
-        if intersects(STATE.ego.rect, wall.rect):
-            STATE.crashed = True
-
 
 def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "actions_log.json", agent=None):
     global STATE
@@ -289,7 +278,7 @@ def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "a
         STATE.distance += STATE.ego.velocity.x
         update_cars()
         remove_passed_cars()
-        place_car()
+        #place_car()
 
         #print("Current action:", action)
         #print("Currnet tick:", STATE.ticks)
@@ -298,16 +287,15 @@ def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "a
         for sensor in STATE.sensors:
             sensor.update()
         
-        check_collision()
         # Handle collisions
-        #for car in STATE.cars:
-        #    if car != STATE.ego and intersects(STATE.ego.rect, car.rect):
-        #        STATE.crashed = True
+        for car in STATE.cars:
+            if car != STATE.ego and intersects(STATE.ego.rect, car.rect):
+                STATE.crashed = True
         
         # Check collision with walls
-        #for wall in STATE.road.walls:
-        #    if intersects(STATE.ego.rect, wall.rect):
-        #        STATE.crashed = True
+        for wall in STATE.road.walls:
+            if intersects(STATE.ego.rect, wall.rect):
+                STATE.crashed = True
 
         # Render game (only if verbose)
         if verbose:

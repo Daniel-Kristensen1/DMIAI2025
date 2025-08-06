@@ -11,6 +11,7 @@ class RaceCarEnv(gym.Env):
         self.api_url = "http://example.com/api/predict"
         self.seed_value = seed_value
         self.sensor_removal = sensor_removal
+        self.var = 0  # For debugging
 
         # Init game state in memory
         self._state = None
@@ -42,7 +43,7 @@ class RaceCarEnv(gym.Env):
         self._state.distance += self._state.ego.velocity.x
         update_cars()
         remove_passed_cars()
-        place_car()
+        #place_car() # Deaktiverer for at fjerne biler fra banen
 
         for sensor in self._state.sensors:
             sensor.update()
@@ -67,23 +68,35 @@ class RaceCarEnv(gym.Env):
 
     def _compute_reward(self):
         if self._state.crashed:
-            return -100.0
+            return -1000.0
 
         # Filtrér kun sensor-readings der IKKE er None
-        valid_readings = [sensor.reading for sensor in self._state.sensors if sensor.reading is not None]
+        #valid_readings = [sensor.reading for sensor in self._state.sensors if sensor.reading is not None]
+        valid_readings = [sensor.reading if sensor.reading is not None else 1000 for sensor in self._state.sensors]
+
+        if self.var == 0:
+            print("Valid readings:", valid_readings)
+            print("Sensor readings:", [sensor.reading for sensor in self._state.sensors])
+            self.var +=1
+        #valid_readings=False
         #print("Valid readings:", valid_readings)
         # Hvis ingen valide readings, undgå min() og giv 0 straf
         if valid_readings:
             min_distance = min(valid_readings)
-            danger_penalty = -1 if min_distance < 200 else 0
+            danger_penalty = -10 if min_distance < 400 else 0
         else:
             danger_penalty = 0
 
-        step_penalty = 0.0
+        step_penalty = 9
         #distance_reward = self._state.ego.velocity.x
         distance_reward = 0 #Nul for at udforske om den kan undvige biler
+            # Tilføj bonus for at overleve mere end 900 ticks
+        bonus = 0
+        if hasattr(self._state, 'ticks') and self._state.ticks > 900:
+            bonus = 100  # eller et passende beløbsantal
 
-        return distance_reward + danger_penalty + step_penalty
+        return distance_reward + danger_penalty + step_penalty + bonus
+
 
 
     def render(self, mode="human"):
