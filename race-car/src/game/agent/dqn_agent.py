@@ -25,7 +25,7 @@ class QNetwork(nn.Module):
 
 class DQNAgent(BaseAgent):
     def __init__(self, obs_dim, action_dim, lr=1e-3, gamma=0.99, epsilon=1.0,
-                 epsilon_min=0.05, epsilon_decay=0.995, buffer_size=10000, batch_size=256):
+                 epsilon_min=0.05, epsilon_decay=0.9995, buffer_size=10000, batch_size=256):
         super().__init__()
         self.obs_dim = obs_dim
         self.action_dim = action_dim

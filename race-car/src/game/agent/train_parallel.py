@@ -112,3 +112,33 @@ def parallel_training(total_episodes=episodes, workers=4):
 
 if __name__ == "__main__":
     parallel_training()
+
+
+    # Evaluer den trænede model
+    from src.game.env import RaceCarEnv
+    from src.game.agent.dqn_agent import DQNAgent
+    import torch
+
+    # Init environment
+    env = RaceCarEnv()
+
+    # Init agent
+    obs_dim = env.observation_space.shape[0]
+    action_dim = env.action_space.n
+    agent = DQNAgent(obs_dim, action_dim)
+
+    # Load model weights
+    agent.q_net.load_state_dict(torch.load("dqn_agent_weights_parallel.pth"))
+    agent.q_net.eval()
+
+    # Eval loop
+    obs = env.reset()
+    done = False
+    total_reward = 0
+
+    while not done:
+        action = agent.select_action(obs)
+        obs, reward, done, info = env.step(action)
+        total_reward += reward
+
+    print(f"Total reward: {total_reward}, Distance: {info['distance']}")

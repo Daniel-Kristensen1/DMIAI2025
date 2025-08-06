@@ -22,7 +22,7 @@ agent = DQNAgent(obs_dim, action_dim)
 agent.q_net.to(device)
 agent.target_net.to(device)  # Husk også target net på GPU
 
-num_episodes = 100
+num_episodes = 3000
 target_update_freq = 10
 
 for episode in trange(num_episodes, desc="Training Progress"):

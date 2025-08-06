@@ -242,6 +242,17 @@ def get_observation_from_state(state):
 # Main game loop
 ACTION_LOG = []
 
+def check_collision():
+    # Handle collisions
+    for car in STATE.cars:
+        if car != STATE.ego and intersects(STATE.ego.rect, car.rect):
+            STATE.crashed = True
+    # Check collision with walls
+    for wall in STATE.road.walls:
+        if intersects(STATE.ego.rect, wall.rect):
+            STATE.crashed = True
+
+
 def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "actions_log.json", agent=None):
     global STATE
     clock = pygame.time.Clock()
@@ -287,15 +298,16 @@ def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "a
         for sensor in STATE.sensors:
             sensor.update()
         
+        check_collision()
         # Handle collisions
-        for car in STATE.cars:
-            if car != STATE.ego and intersects(STATE.ego.rect, car.rect):
-                STATE.crashed = True
+        #for car in STATE.cars:
+        #    if car != STATE.ego and intersects(STATE.ego.rect, car.rect):
+        #        STATE.crashed = True
         
         # Check collision with walls
-        for wall in STATE.road.walls:
-            if intersects(STATE.ego.rect, wall.rect):
-                STATE.crashed = True
+        #for wall in STATE.road.walls:
+        #    if intersects(STATE.ego.rect, wall.rect):
+        #        STATE.crashed = True
 
         # Render game (only if verbose)
         if verbose:
