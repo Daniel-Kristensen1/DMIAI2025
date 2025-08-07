@@ -228,7 +228,7 @@ def update_game(current_action: str):
     STATE.distance += STATE.ego.velocity.x
     update_cars()
     remove_passed_cars()
-    place_car()
+    #place_car()
     for sensor in STATE.sensors:
         sensor.update()
 
@@ -280,7 +280,7 @@ def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "a
         STATE.distance += STATE.ego.velocity.x
         update_cars()
         remove_passed_cars()
-        place_car()
+        #place_car()
 
         #print("Current action:", action)
         #print("Currnet tick:", STATE.ticks)

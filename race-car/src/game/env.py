@@ -50,7 +50,7 @@ class RaceCarEnv(gym.Env):
         self._state.distance += self._state.ego.velocity.x
         update_cars()
         remove_passed_cars()
-        place_car() # Deaktiverer for at fjerne biler fra banen
+        #place_car() # Deaktiverer for at fjerne biler fra banen
 
         for sensor in self._state.sensors:
             sensor.update()
@@ -108,7 +108,7 @@ class RaceCarEnv(gym.Env):
         #   bonus = 100
 
         if self._prev_reading is not None and min_distance > self._prev_reading < 400:
-            correction_reward = +2  # fordi den er længere væk fra fare
+            correction_reward = +5  # fordi den er længere væk fra fare
         else:
             correction_reward = 0
         self._prev_reading = min_distance
