@@ -18,12 +18,13 @@ env = RaceCarEnv()
 obs_dim = len(env.reset())
 action_dim = 5
 
-agent = DQNAgent(obs_dim, action_dim)  
+num_episodes = 100
+target_update_freq = 10
+
+agent = DQNAgent(obs_dim, action_dim, episodes=num_episodes)  
 agent.q_net.to(device)
 agent.target_net.to(device)  # Husk også target net på GPU
 
-num_episodes = 100
-target_update_freq = 10
 
 for episode in trange(num_episodes, desc="Training Progress"):
     obs = env.reset()

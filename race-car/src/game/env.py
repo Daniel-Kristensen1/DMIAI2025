@@ -26,6 +26,10 @@ class RaceCarEnv(gym.Env):
         obs_dim = len(get_observation_from_state(dummy_state))
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32)
 
+        #Rewards:
+        self._prev_reading = None  # For at holde styr på tidligere sensor reading
+
+
     def _initialize_internal_state(self):
         # Brug core-funktion, men behold lokal kopi af state
         initialize_game_state(self.api_url, self.seed_value, self.sensor_removal)
@@ -34,6 +38,9 @@ class RaceCarEnv(gym.Env):
 
     def reset(self):
         self._initialize_internal_state()
+            # Tving sensor-update så de har readings klar til observation
+        for sensor in self._state.sensors:
+            sensor.update()
         return np.array(get_observation_from_state(self._state), dtype=np.float32)
 
     def step(self, action_idx):
@@ -43,7 +50,7 @@ class RaceCarEnv(gym.Env):
         self._state.distance += self._state.ego.velocity.x
         update_cars()
         remove_passed_cars()
-        #place_car() # Deaktiverer for at fjerne biler fra banen
+        place_car() # Deaktiverer for at fjerne biler fra banen
 
         for sensor in self._state.sensors:
             sensor.update()
@@ -66,36 +73,48 @@ class RaceCarEnv(gym.Env):
 
         return obs, reward, done, info
 
+
+    
     def _compute_reward(self):
         if self._state.crashed:
-            return -1000.0
+            return -10.0
 
-        # Filtrér kun sensor-readings der IKKE er None
-        #valid_readings = [sensor.reading for sensor in self._state.sensors if sensor.reading is not None]
+        # Erstat None readings med 1000
         valid_readings = [sensor.reading if sensor.reading is not None else 1000 for sensor in self._state.sensors]
 
         if self.var == 0:
             print("Valid readings:", valid_readings)
             print("Sensor readings:", [sensor.reading for sensor in self._state.sensors])
-            self.var +=1
-        #valid_readings=False
-        #print("Valid readings:", valid_readings)
-        # Hvis ingen valide readings, undgå min() og giv 0 straf
+            self.var += 1
+
+        # Straf hvis tæt på noget
         if valid_readings:
             min_distance = min(valid_readings)
-            danger_penalty = -10 if min_distance < 400 else 0
+            danger_distance = 400
+            danger_penalty = -100*(1-(min_distance/danger_distance)) if min_distance < danger_distance else 0
         else:
             danger_penalty = 0
 
-        step_penalty = 9
-        #distance_reward = self._state.ego.velocity.x
-        distance_reward = 0 #Nul for at udforske om den kan undvige biler
-            # Tilføj bonus for at overleve mere end 900 ticks
-        bonus = 0
-        if hasattr(self._state, 'ticks') and self._state.ticks > 900:
-            bonus = 100  # eller et passende beløbsantal
+        # Konstant straf for hvert step
+        step_penalty = 1
 
-        return distance_reward + danger_penalty + step_penalty + bonus
+        # Ingen distance reward for nu
+        #distance_reward = self._state.ego.velocity.x * 0.1  # justér vægten efter behov
+        #distance_reward = self._state.ego.position.x  # hvis du hellere vil måle afstand frem for hastighed
+        distance_reward = 0
+        # Bonus for hver 100. tick
+        bonus = 0
+        #if hasattr(self._state, 'ticks') and self._state.ticks > 0 and self._state.ticks % 100 == 0:
+        #   bonus = 100
+
+        if self._prev_reading is not None and min_distance > self._prev_reading < 400:
+            correction_reward = +2  # fordi den er længere væk fra fare
+        else:
+            correction_reward = 0
+        self._prev_reading = min_distance
+
+        return distance_reward + danger_penalty + step_penalty + bonus + correction_reward
+
 
 
 

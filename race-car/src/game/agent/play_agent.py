@@ -15,7 +15,7 @@ def main():
     obs_dim = len(obs)
     action_dim = 5
 
-    agent = DQNAgent(obs_dim, action_dim, epsilon=0.05)
+    agent = DQNAgent(obs_dim, action_dim, epsilon=0.01)
     agent.q_net.load_state_dict(torch.load("dqn_agent_weights.pth", map_location=device))
     agent.q_net.to(device)
     agent.q_net.eval()  # Sæt i eval mode (vigtigt!)

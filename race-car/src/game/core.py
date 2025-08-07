@@ -228,7 +228,7 @@ def update_game(current_action: str):
     STATE.distance += STATE.ego.velocity.x
     update_cars()
     remove_passed_cars()
-    #place_car()
+    place_car()
     for sensor in STATE.sensors:
         sensor.update()
 
@@ -236,8 +236,10 @@ def update_game(current_action: str):
 
 def get_observation_from_state(state):
     obs = [state.ego.x, state.ego.y, state.ego.velocity.x]
+    #print(f"state.sensors: {state.sensors}")
     #obs += [s.value for s in state.sensors]
-    obs += [s.reading if s.reading is not None else -1 for s in state.sensors]
+    #obs += [s.reading if s.reading is not None else -1 for s in state.sensors]
+    obs += [s.reading for s in state.sensors]
     return obs 
 # Main game loop
 ACTION_LOG = []
@@ -278,7 +280,7 @@ def game_loop(verbose: bool = True, log_actions: bool = True, log_path: str = "a
         STATE.distance += STATE.ego.velocity.x
         update_cars()
         remove_passed_cars()
-        #place_car()
+        place_car()
 
         #print("Current action:", action)
         #print("Currnet tick:", STATE.ticks)
